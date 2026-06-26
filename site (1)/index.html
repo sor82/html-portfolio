@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ورود / ثبت نام</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+	font-family: Tahoma, Arial, sans-serif;
+	background: #1a1a1a;
+	height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	direction: rtl;
+	color: #eee;
+}
+
+.box {
+	width: 320px;
+	background: #2a2a2a;
+	border: 2px solid #ff6600;
+	border-radius: 5px;
+	padding: 20px;
+}
+
+.tabs {
+	display: flex;
+	margin-bottom: 18px;
+	border-bottom: 1px solid #444;
+}
+
+.tab {
+	flex: 1;
+	padding: 9px;
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	color: #888;
+	font-family: Tahoma;
+	font-size: 14px;
+	cursor: pointer;
+	margin-bottom: -1px;
+}
+
+.tab.active {
+	color: #ff6600;
+	border-bottom: 2px solid #ff6600;
+}
+
+.frm { display: none; }
+.frm.active { display: block; }
+
+.row { margin-bottom: 12px; }
+
+.row label {
+	display: block;
+	font-size: 13px;
+	color: #bbb;
+	margin-bottom: 4px;
+}
+
+.row input {
+	width: 100%;
+	padding: 8px;
+	background: #1a1a1a;
+	border: 1px solid #444;
+	border-radius: 3px;
+	color: #eee;
+	font-family: Tahoma;
+	font-size: 14px;
+}
+
+.row input:focus {
+	outline: none;
+	border-color: #ff6600;
+}
+
+.err {
+	display: none;
+	background: #3a1a1a;
+	border: 1px solid #ff3333;
+	color: #ff5555;
+	font-size: 12px;
+	text-align: center;
+	padding: 6px;
+	border-radius: 3px;
+	margin-bottom: 10px;
+}
+
+.ok {
+	display: none;
+	background: #1a3a1a;
+	border: 1px solid #33aa33;
+	color: #55cc55;
+	font-size: 12px;
+	text-align: center;
+	padding: 6px;
+	border-radius: 3px;
+	margin-bottom: 10px;
+}
+
+.btn {
+	width: 100%;
+	padding: 9px;
+	background: #ff6600;
+	border: none;
+	border-radius: 3px;
+	color: white;
+	font-family: Tahoma;
+	font-size: 14px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.btn:hover { background: #cc5200; }
+</style>
+</head>
+<body>
+
+<div class="box">
+	<div class="tabs">
+		<button class="tab active" onclick="goTab('login')">ورود</button>
+		<button class="tab" onclick="goTab('signup')">ثبت نام</button>
+	</div>
+
+	<div class="frm active" id="loginFrm">
+		<div class="row">
+			<label>نام کاربری</label>
+			<input type="text" id="lu" placeholder="نام کاربری">
+		</div>
+		<div class="row">
+			<label>رمز عبور</label>
+			<input type="password" id="lp" placeholder="رمز عبور">
+		</div>
+		<div class="err" id="lErr"></div>
+		<button class="btn" onclick="doLogin()">ورود</button>
+	</div>
+
+	<div class="frm" id="signupFrm">
+		<div class="row">
+			<label>نام کاربری</label>
+			<input type="text" id="ru" placeholder="نام کاربری دلخواه">
+		</div>
+		<div class="row">
+			<label>ایمیل</label>
+			<input type="email" id="re" placeholder="email@example.com">
+		</div>
+		<div class="row">
+			<label>رمز عبور</label>
+			<input type="password" id="rp" placeholder="حداقل ۶ کاراکتر">
+		</div>
+		<div class="row">
+			<label>تکرار رمز عبور</label>
+			<input type="password" id="rp2" placeholder="رمز عبور را دوباره وارد کنید">
+		</div>
+		<div class="err" id="rErr"></div>
+		<div class="ok" id="rOk">حساب ساخته شد! در حال انتقال...</div>
+		<button class="btn" onclick="doSignup()">ایجاد حساب</button>
+	</div>
+</div>
+
+<script>
+function getUsers() {
+	var d = localStorage.getItem("usersDb");
+	if (!d) return [];
+	return JSON.parse(d);
+}
+
+function saveUsers(list) {
+	localStorage.setItem("usersDb", JSON.stringify(list));
+}
+
+function goTab(which) {
+	var allTabs = document.querySelectorAll(".tab");
+	var allFrms = document.querySelectorAll(".frm");
+	for (var i = 0; i < allTabs.length; i++) {
+		allTabs[i].classList.remove("active");
+		allFrms[i].classList.remove("active");
+	}
+	if (which == "login") {
+		allTabs[0].classList.add("active");
+		document.getElementById("loginFrm").classList.add("active");
+	} else {
+		allTabs[1].classList.add("active");
+		document.getElementById("signupFrm").classList.add("active");
+	}
+}
+
+function doLogin() {
+	var u = document.getElementById("lu").value.trim();
+	var p = document.getElementById("lp").value;
+	var errEl = document.getElementById("lErr");
+
+	if (!u || !p) {
+		errEl.innerHTML = "همه فیلدها را پر کنید";
+		errEl.style.display = "block";
+		return;
+	}
+
+	var users = getUsers();
+	var found = null;
+	for (var i = 0; i < users.length; i++) {
+		if (users[i].username == u && users[i].password == p) {
+			found = users[i];
+		}
+	}
+
+	if (!found) {
+		errEl.innerHTML = "نام کاربری یا رمز عبور اشتباه است";
+		errEl.style.display = "block";
+		return;
+	}
+
+	errEl.style.display = "none";
+	sessionStorage.setItem("curUser", JSON.stringify(found));
+	window.location.href = "dashboard.html";
+}
+
+function doSignup() {
+	var u = document.getElementById("ru").value.trim();
+	var e = document.getElementById("re").value.trim();
+	var p = document.getElementById("rp").value;
+	var p2 = document.getElementById("rp2").value;
+	var errEl = document.getElementById("rErr");
+	var okEl = document.getElementById("rOk");
+
+	errEl.style.display = "none";
+	okEl.style.display = "none";
+
+	if (!u || !e || !p || !p2) {
+		errEl.innerHTML = "همه فیلدها را پر کنید";
+		errEl.style.display = "block";
+		return;
+	}
+	if (p != p2) {
+		errEl.innerHTML = "رمز عبور و تکرار آن یکسان نیستند";
+		errEl.style.display = "block";
+		return;
+	}
+	if (p.length < 6) {
+		errEl.innerHTML = "رمز عبور باید حداقل ۶ کاراکتر باشد";
+		errEl.style.display = "block";
+		return;
+	}
+
+	var users = getUsers();
+	for (var i = 0; i < users.length; i++) {
+		if (users[i].username == u) {
+			errEl.innerHTML = "این نام کاربری قبلا ثبت شده است";
+			errEl.style.display = "block";
+			return;
+		}
+		if (users[i].email == e) {
+			errEl.innerHTML = "این ایمیل قبلا ثبت شده است";
+			errEl.style.display = "block";
+			return;
+		}
+	}
+
+	var newUser = {
+		id: Date.now(),
+		username: u,
+		email: e,
+		password: p,
+		createdAt: new Date().toLocaleDateString("fa-IR")
+	};
+
+	users.push(newUser);
+	saveUsers(users);
+
+	okEl.style.display = "block";
+	document.getElementById("ru").value = "";
+	document.getElementById("re").value = "";
+	document.getElementById("rp").value = "";
+	document.getElementById("rp2").value = "";
+
+	setTimeout(function() {
+		sessionStorage.setItem("curUser", JSON.stringify(newUser));
+		window.location.href = "dashboard.html";
+	}, 1500);
+}
+
+document.getElementById("lp").onkeydown = function(e) {
+	if (e.key == "Enter") doLogin();
+}
+</script>
+
+</body>
+</html>

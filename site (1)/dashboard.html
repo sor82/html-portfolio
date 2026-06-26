@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+	font-family: Tahoma, Arial, sans-serif;
+	background: #1a1a1a;
+	min-height: 100vh;
+	direction: rtl;
+	color: #eee;
+	padding: 16px;
+}
+
+.topbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: #2a2a2a;
+	border: 1px solid #ff6600;
+	border-radius: 4px;
+	padding: 10px 14px;
+	margin-bottom: 16px;
+}
+
+.topbar .logo {
+	font-size: 15px;
+	color: #ff6600;
+	font-weight: bold;
+}
+
+.topbar .hi {
+	font-size: 13px;
+	color: #aaa;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: 250px 1fr;
+	gap: 14px;
+}
+
+.card {
+	background: #2a2a2a;
+	border: 1px solid #444;
+	border-radius: 4px;
+	padding: 14px;
+}
+
+.card h3 {
+	font-size: 13px;
+	color: #ff6600;
+	border-bottom: 1px solid #333;
+	padding-bottom: 8px;
+	margin-bottom: 12px;
+}
+
+.avatar {
+	width: 65px;
+	height: 65px;
+	border-radius: 50%;
+	background: #ff6600;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26px;
+	font-weight: bold;
+	color: white;
+	margin: 0 auto 14px auto;
+	border: 2px solid #ff8800;
+}
+
+.info {
+	font-size: 13px;
+	color: #aaa;
+	margin-bottom: 8px;
+	word-break: break-all;
+}
+
+.info span {
+	color: #eee;
+	font-weight: bold;
+}
+
+.dot {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	background: #33cc33;
+	border-radius: 50%;
+	margin-left: 5px;
+	animation: bl 1.3s ease-in-out infinite;
+}
+@keyframes bl {
+	0%, 100% { opacity:1; }
+	50% { opacity:0.2; }
+}
+
+.status-bar {
+	background: #1a2a1a;
+	border: 1px solid #2d5a2d;
+	border-radius: 3px;
+	padding: 6px 10px;
+	font-size: 12px;
+	color: #55cc55;
+	margin-bottom: 12px;
+}
+
+.btn-logout {
+	width: 100%;
+	padding: 8px;
+	background: #333;
+	border: 1px solid #555;
+	border-radius: 3px;
+	color: #bbb;
+	font-family: Tahoma;
+	font-size: 13px;
+	cursor: pointer;
+	margin-bottom: 6px;
+}
+
+.btn-logout:hover {
+	background: #3d3d3d;
+	border-color: #ff6600;
+	color: #eee;
+}
+
+.btn-delete {
+	width: 100%;
+	padding: 8px;
+	background: #3a1a1a;
+	border: 1px solid #aa3333;
+	border-radius: 3px;
+	color: #ff5555;
+	font-family: Tahoma;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+.btn-delete:hover {
+	background: #4a2020;
+	border-color: #ff3333;
+}
+
+.course {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 9px 11px;
+	background: #1a1a1a;
+	border: 1px solid #333;
+	border-radius: 3px;
+	margin-bottom: 7px;
+	font-size: 13px;
+}
+
+.course .cname { color: #eee; }
+.course .cunits { color: #777; font-size: 12px; }
+.course .cgrade { color: #ff6600; font-weight: bold; font-size: 13px; }
+
+@media (max-width: 580px) {
+	.grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+	<div class="logo">🔥 پنل کاربری</div>
+	<div class="hi" id="topHi"></div>
+</div>
+
+<div class="grid">
+
+	<div class="card">
+		<h3>پروفایل کاربر</h3>
+
+		<div class="avatar" id="av"></div>
+
+		<div class="status-bar">
+			<span class="dot"></span> وضعیت: آنلاین
+		</div>
+
+		<div class="info">نام کاربری: <span id="pUser"></span></div>
+		<div class="info">ایمیل: <span id="pEmail"></span></div>
+		<div class="info">تاریخ ثبت نام: <span id="pDate"></span></div>
+
+		<br>
+		<button class="btn-logout" onclick="doLogout()">خروج از حساب</button>
+		<button class="btn-delete" onclick="doDelete()">حذف حساب از دیتابیس</button>
+	</div>
+
+	<div class="card">
+		<h3>لیست دروس ترم جاری</h3>
+		<div id="courses"></div>
+	</div>
+
+</div>
+
+<script>
+var raw = sessionStorage.getItem("curUser");
+if (!raw) {
+	window.location.href = "index.html";
+}
+var user = JSON.parse(raw);
+
+document.getElementById("topHi").innerHTML = "خوش آمدید، " + user.username;
+document.getElementById("av").innerHTML = user.username.charAt(0).toUpperCase();
+document.getElementById("pUser").innerHTML = user.username;
+document.getElementById("pEmail").innerHTML = user.email;
+document.getElementById("pDate").innerHTML = user.createdAt;
+
+var dars = [
+	{ name: "ریاضی عمومی ۱", units: "۳ واحد", grade: "15.5" },
+	{ name: "فیزیک پایه ۱", units: "۳ واحد", grade: "14" },
+	{ name: "برنامه نویسی پیشرفته", units: "۴ واحد", grade: "15" },
+	{ name: " مبانی احتمال", units: "۳ واحد", grade: "13" },
+	{ name: " مبانی علوم ریاضی", units: "۳ واحد", grade: "14.5" },
+	{ name: "مبانی ترکیبیات", units: "۳ واحد", grade: "16" }
+];
+
+var el = document.getElementById("courses");
+for (var i = 0; i < dars.length; i++) {
+	var d = dars[i];
+	var div = document.createElement("div");
+	div.className = "course";
+	div.innerHTML = '<span class="cname">' + d.name + '</span>' +
+	                '<span class="cunits">' + d.units + '</span>' +
+	                '<span class="cgrade">نمره: ' + d.grade + '</span>';
+	el.appendChild(div);
+}
+
+function doLogout() {
+	sessionStorage.removeItem("curUser");
+	window.location.href = "index.html";
+}
+
+function doDelete() {
+	var yes = confirm("آیا مطمئنید؟\nحساب شما برای همیشه از دیتابیس حذف می‌شود.");
+	if (!yes) return;
+
+	var users = JSON.parse(localStorage.getItem("usersDb") || "[]");
+	var newList = [];
+	for (var i = 0; i < users.length; i++) {
+		if (users[i].id != user.id) {
+			newList.push(users[i]);
+		}
+	}
+	localStorage.setItem("usersDb", JSON.stringify(newList));
+	sessionStorage.removeItem("curUser");
+	window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
